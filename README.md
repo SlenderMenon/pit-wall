@@ -2,14 +2,14 @@
 
 A racing strategy game. You're on the pit wall for car 27: pick tyres, time your stops, manage pace, and gamble on safety cars.
 
-## What's new in V3
+## What's new in V2
 
 - **Live track map**: every car moves round the circuit in real time. Pitting cars drop into the pit lane, and the field bunches up behind the safety car.
 - **Slower, smarter pacing**: 1× is now about 2.5 s a lap. The game slows down automatically for key moments (safety car, a rival pitting near you, worn tyres, the last 5 laps).
 - **Safety car you can't miss**: a striped banner, a flashing yellow screen edge, a vibration on Android, and a "Box or stay out?" decision prompt.
 - **Race control alerts**: banners for tyres going off, 5 laps to go, last lap and green flag.
 
-## What's in V2
+## What's in V1
 
 - **Daily race**: everyone gets the same track, rival strategies and safety car on a given day. Your first run of the day is your official result.
 - **Free practice**: random races on any of the four tracks.
@@ -30,13 +30,6 @@ A racing strategy game. You're on the pit wall for car 27: pick tyres, time your
 
 Double-click `index.html`. The game plays fully. Install and offline mode only switch on once it's served from a real web address (see below).
 
-## Put it online
-
-1. Create a GitHub repository called `pit-wall` and upload these files (keep the `icons` folder).
-2. On Netlify: **Add new site → Import an existing project → GitHub**, pick `pit-wall`, leave the build command empty, publish directory `.`, then deploy.
-3. Rename the site under **Site configuration → Change site name**.
-
-Every time you change a file on GitHub, Netlify redeploys automatically within a minute.
 
 ## Updating
 
