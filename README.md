@@ -2,6 +2,13 @@
 
 A racing strategy game. You're on the pit wall for car 27: pick tyres, time your stops, manage pace, and gamble on safety cars.
 
+## What's new in V3
+
+- **Live track map**: every car moves round the circuit in real time. Pitting cars drop into the pit lane, and the field bunches up behind the safety car.
+- **Slower, smarter pacing**: 1× is now about 2.5 s a lap. The game slows down automatically for key moments (safety car, a rival pitting near you, worn tyres, the last 5 laps).
+- **Safety car you can't miss**: a striped banner, a flashing yellow screen edge, a vibration on Android, and a "Box or stay out?" decision prompt.
+- **Race control alerts**: banners for tyres going off, 5 laps to go, last lap and green flag.
+
 ## What's in V2
 
 - **Daily race**: everyone gets the same track, rival strategies and safety car on a given day. Your first run of the day is your official result.

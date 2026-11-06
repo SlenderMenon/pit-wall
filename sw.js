@@ -1,6 +1,6 @@
 // Pit Wall service worker: makes the game load fast and work offline.
 // When you change any file other than index.html, bump this version number.
-const CACHE = 'pitwall-v2';
+const CACHE = 'pitwall-v3';
 const ASSETS = [
   './',
   './index.html',
