@@ -40,15 +40,6 @@ To tune difficulty, change the `BAL` line near the top of the script in `index.h
 ## Run it locally
 
 Double-click `index.html`. The game plays fully. Install and offline mode only switch on once it's served from a real web address (see below).
-
-## Put it online
-
-1. Create a GitHub repository called `pit-wall` and upload these files (keep the `icons` folder).
-2. On Netlify: **Add new site → Import an existing project → GitHub**, pick `pit-wall`, leave the build command empty, publish directory `.`, then deploy.
-3. Rename the site under **Site configuration → Change site name**.
-
-Every time you change a file on GitHub, Netlify redeploys automatically within a minute.
-
 ## Updating
 
 - Changes to `index.html` show up for players next time they open the game online.
