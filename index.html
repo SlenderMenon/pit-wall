@@ -24,7 +24,7 @@
   --bg:#0b1115; --panel:#11191e; --panel2:#17222a; --line:#23323c;
   --fg:#e2eaee; --muted:#7a8f99; --amber:#ffb627;
   --soft:#ff4141; --medium:#ffd21f; --hard:#eef2f3;
-  --purple:#b46dff; --green:#36d27c;
+  --purple:#b46dff; --green:#36d27c; --inter:#3fd47a; --wet:#4a9bff;
   --display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
@@ -97,7 +97,7 @@ body.sc::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;b
 .row .pit{font-size:10px;font-weight:700;letter-spacing:.08em;color:#111;background:var(--fg);padding:1px 4px;border-radius:2px}
 .purple{color:var(--purple)} .pb{color:var(--green)}
 .tyre{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;border:3px solid currentColor;font-family:var(--display);font-weight:800;font-size:13px;color:var(--fg);background:#0a0f12;flex:none}
-.tyre.S{border-color:var(--soft)} .tyre.M{border-color:var(--medium)} .tyre.H{border-color:var(--hard)}
+.tyre.S{border-color:var(--soft)} .tyre.M{border-color:var(--medium)} .tyre.H{border-color:var(--hard)} .tyre.I{border-color:var(--inter)} .tyre.W{border-color:var(--wet)}
 .tyrecell{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)}
 @media (max-width:460px){.row .nm{display:none}.thead,.row{grid-template-columns:22px 4px minmax(40px,1fr) 66px 66px 42px 18px;gap:6px;padding:0 4px}.row{font-size:13px}}
 
@@ -163,6 +163,33 @@ body.sc::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;b
 .sharebox{font-family:var(--mono);font-size:13px;white-space:pre-wrap;background:var(--panel2);border-radius:6px;padding:12px;margin:0;color:var(--fg);overflow-x:auto}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .actions .btn{flex:1 1 140px;padding:11px 12px}
+/* Weather */
+.wxpanel{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:6px;background:var(--panel2)}
+.wxline{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.wxdot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--muted)}
+.wxdot.dry{background:var(--medium)} .wxdot.threat{background:var(--wet);animation:scpulse 1.2s steps(2) infinite} .wxdot.rain{background:var(--wet)} .wxdot.drying{background:var(--inter)}
+.wetrow{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.wetbar{flex:1;height:6px;border-radius:3px;background:var(--bg);overflow:hidden}
+.wetbar i{display:block;height:100%;background:var(--wet);transition:width .4s}
+.wxbest{font-size:12px;color:var(--muted)}
+.banner.blue{color:#fff;background:var(--wet)}
+.radio .wx{color:var(--wet)}
+/* Ghost and challenges */
+.row.ghost{opacity:.8;box-shadow:inset 0 0 0 1px var(--muted);background:repeating-linear-gradient(-45deg,transparent 0 6px,color-mix(in srgb,var(--fg) 5%,transparent) 6px 12px)}
+.row.ghost .pos{color:var(--muted)}
+.mono.bad{color:var(--soft)}
+.chal{font-size:14px;color:var(--fg);background:color-mix(in srgb,var(--fg) 6%,var(--panel2));border:1px dashed var(--muted);border-radius:6px;padding:10px 12px;margin:0}
+.tab[hidden]{display:none}
+.tabs{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.trackcard .tnote{flex-basis:100%}
+.vs{display:flex;flex-direction:column;gap:2px;padding:12px;border-radius:6px;background:var(--panel2);border-left:4px solid var(--muted)}
+.vs strong{font-family:var(--display);font-size:22px;text-transform:uppercase;letter-spacing:.04em}
+.vs span{font-size:13px;color:var(--muted)}
+.vs.win{border-left-color:var(--green)} .vs.win strong{color:var(--green)}
+.vs.lose{border-left-color:var(--soft)}
+.tagrow{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.tagrow input{width:5.2ch;font-family:var(--mono);font-size:18px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;text-align:center;padding:6px 4px;border-radius:4px;border:1px solid var(--line);background:var(--panel2);color:var(--fg)}
+.tagrow input:focus{outline:2px solid var(--amber);outline-offset:1px}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:999px;font-weight:600;font-size:14px;z-index:9}
 @media (prefers-reduced-motion:reduce){.row,.lifebar i{transition:none}.flag.sc,.banner.sc,body.sc::after{animation:none}}
 </style>
@@ -208,6 +235,12 @@ body.sc::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;b
           <div class="lifebar"><i id="lifeBar" style="width:100%"></i></div>
         </div>
         <div class="kv"><span id="gapAhead">Ahead: none</span><span id="gapBehind">Behind: none</span></div>
+        <div class="kv" id="ghostGap" hidden></div>
+        <div class="wxpanel" id="wxPanel" hidden>
+          <div class="wxline"><span class="wxdot" id="wxDot"></span><span id="wxText">Dry</span></div>
+          <div class="wetrow"><span>Track</span><span class="wetbar"><i id="wetBar"></i></span><b id="wetLabel">Dry</b></div>
+          <div class="wxbest" id="wxBest"></div>
+        </div>
         <div>
           <div class="label">Driver mode</div>
           <div class="seg">
@@ -222,6 +255,8 @@ body.sc::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;b
             <button class="boxbtn" data-comp="S" aria-pressed="false"><span class="tyre S">S</span>Soft</button>
             <button class="boxbtn" data-comp="M" aria-pressed="false"><span class="tyre M">M</span>Medium</button>
             <button class="boxbtn" data-comp="H" aria-pressed="false"><span class="tyre H">H</span>Hard</button>
+            <button class="boxbtn wxonly" data-comp="I" aria-pressed="false"><span class="tyre I">I</span>Inter</button>
+            <button class="boxbtn wxonly" data-comp="W" aria-pressed="false"><span class="tyre W">W</span>Wet</button>
           </div>
         </div>
         <div class="forecast" id="forecast"></div>
@@ -245,12 +280,14 @@ body.sc::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;b
     <div class="tabs">
       <button class="tab" data-gmode="daily" aria-pressed="true"><strong>Daily race</strong><span id="dailyLabel">Same race for everyone today</span></button>
       <button class="tab" data-gmode="practice" aria-pressed="false"><strong>Free practice</strong><span>Random race, any track</span></button>
+      <button class="tab" data-gmode="challenge" aria-pressed="false" id="chalTab" hidden><strong>Challenge</strong><span id="chalLabel"></span></button>
     </div>
     <div class="tracks" id="trackPick" hidden></div>
     <div class="trackcard" id="trackCard"></div>
     <div class="done-note" id="doneNote" hidden></div>
+    <p class="chal" id="chalNote" hidden></p>
     <h2>Lights out in two minutes</h2>
-    <p>You're the strategist for car 27, starting <b>P7</b> of 10. The car is quicker than its grid slot. Get it to the front with tyres, timing and nerve.</p>
+    <p id="intro"></p>
     <p id="rules"></p>
     <div class="label" style="margin:0">Pick your starting tyre</div>
     <div class="picks">
@@ -270,6 +307,8 @@ body.sc::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;b
       <button class="boxbtn" data-scbox="S"><span class="tyre S">S</span>Box: Soft</button>
       <button class="boxbtn" data-scbox="M"><span class="tyre M">M</span>Box: Medium</button>
       <button class="boxbtn" data-scbox="H"><span class="tyre H">H</span>Box: Hard</button>
+      <button class="boxbtn wxonly" data-scbox="I"><span class="tyre I">I</span>Box: Inter</button>
+      <button class="boxbtn wxonly" data-scbox="W"><span class="tyre W">W</span>Box: Wet</button>
     </div>
     <button class="btn stay" id="scStay">Stay out</button>
   </div>
@@ -280,9 +319,11 @@ body.sc::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;b
     <div class="verdict" id="verdict">Chequered flag</div>
     <h2 id="resTitle">P5</h2>
     <p id="resText"></p>
+    <div class="vs" id="vs" hidden></div>
     <pre class="sharebox" id="shareBox"></pre>
+    <div class="tagrow"><label for="tag">Your tag</label><input id="tag" maxlength="3" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC"><span>Shows on your ghost car</span></div>
     <div class="actions">
-      <button class="btn primary" id="share">Share result</button>
+      <button class="btn primary" id="share">Challenge a friend</button>
       <button class="btn" id="again">Race again</button>
     </div>
     <table class="res mono" id="resTable"></table>
@@ -291,29 +332,46 @@ body.sc::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;b
 <div class="toast" id="toast" hidden></div>
 
 <script>
-/* ---------- tracks and rules ---------- */
+/* ---------- tracks ---------- */
+/* sc = safety car chance, rain = chance of a rain shower, evo = dusty track that rubbers in,
+   cold = tyres slow to warm up, partial = rain only on part of the lap, heavy = tropical downpours */
 const TRACKS=[
-  {name:'Circuit de Varenne',laps:44,base:89.2,pit:21.5,deg:1.0,pass:1.0,note:'Balanced. Overtaking is possible.',
+  {name:'Circuit de Varenne',laps:44,base:89.2,pit:21.5,deg:1.0,pass:1.0,sc:0.6,rain:0,note:'Balanced. Overtaking is possible.',
    shape:[[.30,.86],[.13,.80],[.10,.52],[.17,.24],[.35,.13],[.55,.20],[.62,.40],[.77,.28],[.90,.40],[.88,.70],[.70,.85],[.50,.82]]},
-  {name:'Kessling Ring',laps:52,base:76.4,pit:19.0,deg:0.85,pass:1.3,note:'Short pit lane and long straights. Easy to pass.',
+  {name:'Kessling Ring',laps:52,base:76.4,pit:19.0,deg:0.85,pass:1.3,sc:0.6,rain:0,note:'Short pit lane and long straights. Easy to pass.',
    shape:[[.50,.88],[.22,.88],[.10,.72],[.10,.30],[.22,.13],[.50,.13],[.78,.13],[.90,.28],[.84,.42],[.92,.56],[.90,.78],[.78,.88]]},
-  {name:'Porto Alvor Street Circuit',laps:58,base:82.8,pit:24.5,deg:0.75,pass:0.5,note:'Walls everywhere. Track position is king.',
+  {name:'Porto Alvor Street Circuit',laps:58,base:82.8,pit:24.5,deg:0.75,pass:0.5,sc:0.7,rain:0,note:'Walls everywhere. Track position is king.',
    shape:[[.40,.88],[.12,.88],[.10,.62],[.10,.28],[.16,.15],[.38,.15],[.44,.32],[.60,.33],[.64,.15],[.87,.15],[.90,.48],[.72,.52],[.70,.70],[.88,.73],[.86,.88],[.64,.88]]},
-  {name:'Hayashi Bay',laps:48,base:91.6,pit:22.0,deg:1.3,pass:0.9,note:'Hot, abrasive surface. Tyres suffer.',
-   shape:[[.40,.88],[.20,.82],[.09,.62],[.13,.36],[.26,.15],[.45,.20],[.50,.40],[.42,.56],[.56,.68],[.71,.50],[.69,.26],[.86,.18],[.93,.52],[.82,.82],[.60,.89]]}
+  {name:'Hayashi Bay',laps:48,base:91.6,pit:22.0,deg:1.3,pass:0.9,sc:0.55,rain:0,note:'Hot, abrasive surface. Tyres suffer.',
+   shape:[[.40,.88],[.20,.82],[.09,.62],[.13,.36],[.26,.15],[.45,.20],[.50,.40],[.42,.56],[.56,.68],[.71,.50],[.69,.26],[.86,.18],[.93,.52],[.82,.82],[.60,.89]]},
+  {name:'Yamuna Ring',laps:60,base:87.5,pit:20.5,deg:0.9,pass:1.35,sc:0.45,rain:0,evo:true,
+   note:'Huge back straight and a banked multi-apex corner. Dusty early: tyres wear fast at first, then the track rubbers in and gets quicker.',
+   shape:[[.48,.86],[.20,.86],[.10,.74],[.20,.62],[.14,.46],[.12,.26],[.24,.13],[.80,.12],[.91,.22],[.83,.33],[.63,.36],[.56,.50],[.70,.58],[.88,.62],[.92,.77],[.80,.87]]},
+  {name:'Selatan Tropic Circuit',laps:56,base:95.8,pit:21.0,deg:1.35,pass:1.2,sc:0.5,rain:0.6,heavy:true,
+   note:'Two long straights joined by a hairpin. Brutal heat chews tyres, and tropical downpours roll in fast.',
+   shape:[[.60,.86],[.20,.86],[.10,.76],[.16,.64],[.10,.48],[.18,.28],[.30,.14],[.45,.22],[.55,.14],[.75,.14],[.88,.26],[.80,.40],[.55,.40],[.40,.50],[.45,.64],[.80,.64],[.92,.72],[.88,.84]]},
+  {name:'Ardenne Forest Circuit',laps:44,base:106.5,pit:19.5,deg:1.0,pass:1.25,sc:0.85,rain:0.55,partial:true,
+   note:'The longest lap: a flat-out climb, a huge straight and a fast forest sweep. Safety cars are common, and rain can hit one part of the lap only.',
+   shape:[[.24,.42],[.12,.24],[.20,.13],[.28,.26],[.34,.40],[.44,.38],[.70,.18],[.83,.14],[.91,.25],[.81,.38],[.87,.56],[.75,.71],[.60,.63],[.52,.80],[.37,.88],[.24,.80],[.30,.62]]},
+  {name:'Eifelring',laps:60,base:89.8,pit:21.0,deg:0.9,pass:0.8,sc:0.55,rain:0.45,cold:true,
+   note:'Twisty and cold. Fresh tyres take a lap to switch on, Hards struggle for grip, and the weather changes fast.',
+   shape:[[.50,.86],[.20,.86],[.12,.74],[.20,.66],[.28,.72],[.34,.60],[.20,.48],[.14,.30],[.26,.16],[.46,.20],[.60,.14],[.84,.16],[.90,.30],[.80,.44],[.86,.60],[.90,.74],[.84,.86],[.76,.80],[.70,.88]]}
 ];
 const PACE=[0,2500,1250,600];
-const COMP={S:{name:'Soft',off:-0.95,deg:0.085,life:14},M:{name:'Medium',off:0,deg:0.048,life:24},H:{name:'Hard',off:0.6,deg:0.03,life:35}};
-const EMO={S:'🔴',M:'🟡',H:'⚪'};
+const COMP={S:{name:'Soft',off:-0.95,deg:0.085,life:14},M:{name:'Medium',off:0,deg:0.048,life:24},H:{name:'Hard',off:0.6,deg:0.03,life:35},
+  I:{name:'Inter',off:0,deg:0.035,life:30},W:{name:'Wet',off:0,deg:0.03,life:34}};
+const SLICK=c=>c==='S'||c==='M'||c==='H';
+const EMO={S:'🔴',M:'🟡',H:'⚪',I:'🟢',W:'🔵'};
 const MODES={save:{off:0.45,wear:0.65},normal:{off:0,wear:1},push:{off:-0.42,wear:1.45}};
-const STRATS=[['M','H'],['S','H'],['S','M','S'],['H','M'],['M','H','S']];
 const ROSTER=[
-  ['VAL','Valdés',-0.32,'#e8473a'],['OKO','Okonkwo',-0.27,'#3a8de8'],['BRE','Breuer',-0.2,'#e8473a'],
-  ['HAR','Hartley',-0.14,'#3a8de8'],['LIN','Lindqvist',-0.06,'#2fbfa5'],['DES','Desai',0.0,'#2fbfa5'],
-  ['YOU','Car 27',-0.24,'#ffb627'],['KOV','Kovač',0.08,'#c56be0'],['MAT','Matsuda',0.14,'#c56be0'],['RUI','Ruiz',0.2,'#8a9aa3']
+  ['VAL','Valdés',-0.32,'#e8473a'],['OKO','Okonkwo',-0.27,'#6f8cff'],['BRE','Breuer',-0.2,'#e8473a'],
+  ['HAR','Hartley',-0.14,'#6f8cff'],['LIN','Lindqvist',-0.06,'#2fbfa5'],['DES','Desai',0.0,'#2fbfa5'],
+  ['KOV','Kovač',0.08,'#c56be0'],['MAT','Matsuda',0.14,'#c56be0'],['RUI','Ruiz',0.2,'#8a9aa3']
 ];
+/* Balance knobs: your car's pace range, rival pace spread, how sharp rival strategists are, your grid slot range. */
+const BAL={pMin:-0.44,pMax:-0.18,aiJit:0.06,temp:3,gridMin:4,gridMax:9};
 
-/* ---------- seeded randomness: same daily race for everyone ---------- */
+/* ---------- seeded randomness: same race for everyone with the same seed ---------- */
 function hashSeed(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}
   h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return (h^h>>>16)>>>0}
 function makeRng(str){let a=hashSeed(str);return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -321,6 +379,7 @@ let R=Math.random, U=Math.random;
 const rnd=(a,b,g=R)=>a+g()*(b-a), ri=(a,b,g=R)=>Math.floor(rnd(a,b+1,g));
 const noise=()=>(R()+R()+R()-1.5)*0.28;
 const fmt=t=>{const m=Math.floor(t/60),s=(t-m*60).toFixed(3).padStart(6,'0');return m+':'+s};
+const fmtRace=t=>{const h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=(t%60).toFixed(1).padStart(4,'0');return (h?h+':'+String(m).padStart(2,'0'):m)+':'+s};
 const $=id=>document.getElementById(id);
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
@@ -329,42 +388,113 @@ const TODAY=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${
 const TODAY_LABEL=now.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
 const DAILY_KEY='pitwall-daily-'+TODAY;
 
-let GMODE='daily', PTRACK=0, S, T, timer=null;
+let GMODE='daily', PTRACK=0, S, T, timer=null, GHOST=null, GH=null;
+
+/* ---------- challenge links ---------- */
+const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return decodeURIComponent(escape(atob(s)))};
+try{
+  const c=new URLSearchParams(location.search).get('c');
+  if(c){
+    const g=JSON.parse(b64d(c));
+    const ok=g&&g.v===1&&typeof g.s==='string'&&TRACKS[g.t]&&/^[A-Z]{3}$/.test(g.n)&&typeof g.h==='string'&&Array.isArray(g.st)&&g.st.every(x=>COMP[x[0]]);
+    if(ok){GHOST=g;GMODE='challenge'}
+  }
+}catch(e){GHOST=null}
+function buildGhost(){
+  if(GMODE!=='challenge'||!GHOST) return null;
+  const hist=[+GHOST.h0||0];
+  for(const x of GHOST.h.split('.')) hist.push(hist[hist.length-1]+parseInt(x,36)/100);
+  const pits={}; (GHOST.pl||[]).forEach(([l,loss])=>pits[l]=loss/10);
+  return {code:GHOST.n,name:'Ghost',isGhost:true,hist,pits,stints:GHOST.st.map(([comp,from,to])=>({comp,from,to})),
+    tt:+GHOST.tt,pos:+GHOST.p,grid:+GHOST.g,best:+GHOST.b};
+}
+
+/* ---------- race model ---------- */
 const life=c=>COMP[c].life/T.deg;
 const pitLoss=()=>S.scActive?Math.round(T.pit*0.54*10)/10:T.pit;
+const outLapCost=()=>T.cold?1.8:0.9;
+/* Dusty track: tyres wear faster early, then it rubbers in. */
+const wearMul=lap=>T.evo?1.35-0.6*Math.min(1,lap/(T.laps*0.5)):1;
+const needsTwo=c=>!c.used.has('I')&&!c.used.has('W')&&[...c.used].filter(SLICK).length<2;
 
-function chooseComp(c,remaining){
+function stintCost(comp,from,to,first){
+  const k=COMP[comp]; let s=first?0:outLapCost(), w=0;
+  for(let l=from;l<=to;l++){
+    s+=k.off+(T.cold&&comp==='H'?0.35:0)+k.deg*w;
+    const o=w-k.life; if(o>0) s+=0.3*Math.pow(o,1.35);
+    w+=T.deg*wearMul(l);
+  }
+  return s;
+}
+/* Rival strategists rank every 1 and 2 stop plan for this track and pick from the best. */
+const PLAN_CACHE={};
+function planCandidates(){
+  if(PLAN_CACHE[T.name]) return PLAN_CACHE[T.name];
+  const L=T.laps, C=['S','M','H'], out=[];
+  for(const A of C)for(const B of C){ if(A===B) continue;
+    for(let l=5;l<=L-5;l++) out.push({c:stintCost(A,1,l,1)+stintCost(B,l+1,L,0)+T.pit,p:[A,{lap:l,comp:B}]}) }
+  for(const A of C)for(const B of C)for(const D of C){ if(A===B&&B===D) continue;
+    for(let l1=5;l1<=L-10;l1+=2) for(let l2=l1+5;l2<=L-4;l2+=2)
+      out.push({c:stintCost(A,1,l1,1)+stintCost(B,l1+1,l2,0)+stintCost(D,l2+1,L,0)+2*T.pit,p:[A,{lap:l1,comp:B},{lap:l2,comp:D}]}) }
+  out.sort((a,b)=>a.c-b.c);
+  return PLAN_CACHE[T.name]=out.slice(0,60);
+}
+function pickPlan(c){
+  const list=planCandidates(), best=list[0].c, w=list.map(x=>Math.exp(-(x.c-best)/BAL.temp)), tot=w.reduce((a,b)=>a+b,0);
+  let r=U()*tot, i=0; while(r>w[i]&&i<list.length-1){r-=w[i];i++}
+  const p=list[i].p; c.comp=p[0]; c.plan=[]; let prev=0;
+  for(const s of p.slice(1)){const lap=Math.max(prev+4,Math.min(T.laps-3,s.lap+ri(-2,2,U)));c.plan.push({lap,comp:s.comp});prev=lap}
+}
+function chooseSlick(c,remaining){
   let cand = remaining<=life('S')-1?'S':remaining<=life('M')?'M':'H';
-  if(c.used.size<2 && c.used.has(cand)) cand = remaining<=life('M') ? (c.used.has('M')?'S':'M') : (c.used.has('H')?'M':'H');
+  if(needsTwo(c) && c.used.has(cand)) cand = remaining<=life('M') ? (c.used.has('M')?'S':'M') : (c.used.has('H')?'M':'H');
   return cand;
 }
-function planFor(c){
-  const st=STRATS[Math.floor(U()*STRATS.length)], lives=st.map(life), tot=lives.reduce((a,b)=>a+b,0);
-  c.comp=st[0]; c.plan=[]; let acc=0, prev=0;
-  for(let i=0;i<st.length-1;i++){
-    acc+=lives[i]*T.laps/tot;
-    let lap=Math.round(acc+rnd(-2.5,2.5,U));
-    lap=Math.max(prev+5,Math.min(lap,Math.floor(prev+lives[i])));
-    c.plan.push({lap,comp:st[i+1]}); prev=lap;
-  }
+function replan(c,comp,lap){
+  const remaining=T.laps-lap; c.plan=[];
+  if(SLICK(comp)&&life(comp)+2<remaining) c.plan=[{lap:lap+Math.round(life(comp))-2,comp:null}];
 }
+
+/* ---------- weather ---------- */
+function rainAt(l){let r=0;for(const e of S.wx.events){if(l>=e.start&&l<e.start+e.len){const x=l-e.start;r=Math.max(r,e.peak*Math.min(1,(x+1)/2,(e.start+e.len-l)/2))}}return r}
+function activeForecast(){return S.wx.fcs.find(f=>f.at<=S.lap&&f.lap>=S.lap)||null}
+const bestTyreFor=we=>we<0.17?'slick':we<0.78?'I':'W';
+const wetWord=we=>we<0.06?'Dry':we<0.3?'Damp':we<0.7?'Wet':'Soaked';
+
 function init(){
   stop();
-  const seed = GMODE==='daily' ? 'pitwall/'+TODAY : 'practice/'+Math.random();
+  const seed = GMODE==='daily' ? 'pitwall/'+TODAY : GMODE==='challenge' ? GHOST.s : 'practice/'+Math.random().toString(36).slice(2,10);
   U=makeRng(seed+'/setup'); R=makeRng(seed+'/race');
   const trackDraw=Math.floor(U()*TRACKS.length);
-  T = GMODE==='daily' ? TRACKS[trackDraw] : TRACKS[PTRACK];
-  S={lap:0,phase:'brief',speed:S?S.speed:1,mode:'normal',scActive:false,scLeft:0,
-     sc: U()<0.7?{start:ri(Math.round(T.laps*.25),Math.round(T.laps*.7),U),len:ri(3,4,U)}:null,
-     fastest:{t:Infinity,code:null},log:[],myLaps:[]};
-  S.cars=ROSTER.map(([code,name,skill,color],i)=>{
-    const c={code,name,skill,color,isPlayer:code==='YOU',grid:i+1,comp:'M',wear:0,age:0,total:i*0.45,last:null,best:Infinity,
-      stops:0,used:new Set(),plan:[],boxReq:null,outLap:false,warned:0,pitLap:0,stints:[],hist:[i*0.45],pits:{}};
-    if(!c.isPlayer) planFor(c);
+  T = GMODE==='daily' ? TRACKS[trackDraw] : GMODE==='challenge' ? TRACKS[GHOST.t] : TRACKS[PTRACK];
+  S={seed,lap:0,phase:'brief',speed:S?S.speed:1,mode:'normal',scActive:false,scLeft:0,
+     fastest:{t:Infinity,code:null},log:[],myLaps:[],wet:0,we:0,rain:0,prevRain:0,peakWe:0,dryAnnounced:false,wx:{events:[],fcs:[]}};
+  // grid and pace
+  const ai=ROSTER.map(([code,name,skill,color])=>({code,name,color,skill:skill+rnd(-BAL.aiJit,BAL.aiJit,U)}));
+  ai.sort((a,b)=>a.skill-b.skill);
+  const grid=ri(BAL.gridMin,BAL.gridMax,U), pSkill=rnd(BAL.pMin,BAL.pMax,U);
+  ai.splice(grid-1,0,{code:'YOU',name:'Car 27',color:'#ffb627',skill:pSkill,isPlayer:true});
+  // safety car and weather
+  S.sc = U()<T.sc ? {start:ri(Math.round(T.laps*.2),Math.round(T.laps*.75),U),len:ri(3,4,U)} : null;
+  const rainRoll=U(), fakeRoll=U();
+  if(rainRoll<T.rain){
+    const start=ri(Math.round(T.laps*.15),Math.round(T.laps*.7),U), len=ri(5,13,U), peak=T.heavy?rnd(.65,1,U):rnd(.35,.95,U);
+    S.wx.events.push({start,len,peak});
+    S.wx.fcs.push({at:Math.max(1,start-ri(5,9,U)),lap:start,pct:ri(60,90,U),real:true});
+  } else if(fakeRoll<T.rain*0.7){
+    const lap=ri(Math.round(T.laps*.2),Math.round(T.laps*.7),U);
+    S.wx.fcs.push({at:Math.max(1,lap-ri(5,8,U)),lap,pct:ri(25,55,U),real:false});
+  }
+  S.cars=ai.map((d,i)=>{
+    const c={...d,isPlayer:!!d.isPlayer,grid:i+1,comp:'M',wear:0,age:0,total:i*0.45,last:null,best:Infinity,
+      stops:0,used:new Set(),plan:[],boxReq:null,outLap:false,warned:0,pitLap:-9,stints:[],hist:[i*0.45],pits:{},wxWant:null,wxAt:0};
+    if(!c.isPlayer) pickPlan(c);
     c.used.add(c.comp);
     return c;
   });
   S.me=S.cars.find(c=>c.isPlayer);
+  GH=buildGhost();
   A={from:0,to:0,t0:0,dur:1}; FL=null; S.nextDelay=PACE[S.speed];
   document.body.classList.remove('sc');
   buildRows(); setMode('normal'); renderBrief(); buildGeom(); render(); updatePlay();
@@ -373,42 +503,89 @@ function init(){
 function radio(text,kind=''){S.log.unshift({lap:S.lap,text,kind}); if(S.log.length>30)S.log.pop()}
 
 function lapTime(c,lap){
-  const k=COMP[c.comp]; let t=T.base+c.skill+k.off-0.042*lap+k.deg*c.wear;
+  const k=COMP[c.comp], we=S.we;
+  let t=T.base+c.skill-0.042*lap-(T.evo?0.02*lap:0)+k.deg*c.wear;
   const over=c.wear-k.life; if(over>0) t+=0.3*Math.pow(over,1.35);
+  if(SLICK(c.comp)) t+=k.off+(T.cold&&c.comp==='H'?0.35:0)+18*we;
+  else if(c.comp==='I') t+=3.0+6*Math.max(0,0.12-we)+9*Math.max(0,we-0.5);
+  else t+=5.5+10*Math.max(0,0.4-we);
   if(c.isPlayer) t+=MODES[S.mode].off;
-  if(c.outLap) t+=0.9;
+  if(c.outLap) t+=outLapCost();
   return t+noise();
 }
-function aiDecide(c,lap,sc){
-  const remaining=T.laps-lap; if(remaining<2) return null;
-  const k=COMP[c.comp];
-  if(c.plan.length && c.plan[0].lap<=lap){const p=c.plan.shift();return p.comp&&!(c.used.size<2&&c.used.has(p.comp)&&c.plan.length===0)?p.comp:chooseComp(c,remaining)}
-  if(sc && remaining>8 && c.wear>k.life*0.35 && R()<0.75){const comp=chooseComp(c,remaining);replan(c,comp,lap);return comp}
-  if(c.wear>k.life+5 && remaining>3){const comp=chooseComp(c,remaining);replan(c,comp,lap);return comp}
-  return null;
+function wearRate(c,lap,sc){
+  const we=S.we;
+  let m=sc?0.3:(c.isPlayer?MODES[S.mode].wear:1);
+  if(c.comp==='I'&&we<0.15) m*=2.2;
+  if(c.comp==='W'&&we<0.35) m*=2.5;
+  if(SLICK(c.comp)&&we>0.3) m*=0.6;
+  return m*T.deg*wearMul(lap);
 }
-function replan(c,comp,lap){
-  const remaining=T.laps-lap; c.plan=[];
-  if(life(comp)+2<remaining) c.plan=[{lap:lap+Math.round(life(comp))-2,comp:null}];
+function aiDecide(c,lap,sc,behind,pittedPrev){
+  const remaining=T.laps-lap; if(remaining<2) return null;
+  const we=S.we, k=COMP[c.comp];
+  // weather calls, with a lap or two of hesitation
+  let want=null;
+  if(SLICK(c.comp)){ if(we>0.2) want=we>0.75?'W':'I' }
+  else if(c.comp==='I'){ if(we>0.82) want='W'; else if(we<0.12) want='slick' }
+  else { if(we<0.12) want='slick'; else if(we<0.55) want='I' }
+  if(want){
+    if(c.wxWant!==want){c.wxWant=want;c.wxAt=lap+ri(0,2)}
+    if(lap>=c.wxAt){c.wxWant=null;const comp=want==='slick'?chooseSlick(c,remaining):want;replan(c,comp,lap);return comp}
+    return null;
+  }
+  c.wxWant=null;
+  if(!SLICK(c.comp)) return null;
+  if(c.plan.length&&c.plan[0].lap<=lap){
+    const f=activeForecast();
+    if(f&&f.pct>=60&&f.lap-lap<=5&&remaining>8&&c.wear<k.life+2){c.plan[0].lap=lap+2;return null}
+    const p=c.plan.shift(); let comp=p.comp;
+    if(!comp||(needsTwo(c)&&c.used.has(comp)&&c.plan.length===0)) comp=chooseSlick(c,remaining);
+    return comp;
+  }
+  // cover the undercut from the car behind
+  if(!sc&&behind&&pittedPrev.has(behind)&&behind.total-c.total<T.pit+3&&c.plan.length&&c.plan[0].lap-lap<=6){
+    const p=c.plan.shift(); return p.comp||chooseSlick(c,remaining);
+  }
+  if(sc&&remaining>8&&c.wear>k.life*0.35&&R()<0.75){const comp=chooseSlick(c,remaining);replan(c,comp,lap);return comp}
+  if(c.wear>k.life+5&&remaining>3){const comp=chooseSlick(c,remaining);replan(c,comp,lap);return comp}
+  return null;
 }
 function doPit(c,comp,lap){
   c.comp=comp;c.wear=0;c.age=0;c.stops++;c.used.add(comp);c.outLap=true;c.warned=0;c.pitLap=lap;
 }
 
+function weatherTick(lap){
+  const r=rainAt(lap);
+  if(r>0) S.wet+=(r-S.wet)*0.5; else S.wet=Math.max(0,S.wet-0.075);
+  S.rain=r; S.we=T.partial?S.wet*0.6:S.wet; S.peakWe=Math.max(S.peakWe,S.we);
+  for(const f of S.wx.fcs){
+    if(f.at===lap){radio(`Weather: ${f.pct}% chance of rain in about ${Math.max(1,f.lap-lap)} laps.`,'wx');flash('Rain forecast','blue',`${f.pct}% chance in about ${Math.max(1,f.lap-lap)} laps`);S.dramaLap=lap}
+    if(f.lap===lap&&!f.real) radio('That rain band has missed us. Dry for now.','wx');
+  }
+  if(r>0&&S.prevRain===0){radio(T.partial?'Rain on part of the lap! Watch the crossover to Inters.':'It is raining! Track is getting wet.','wx');flash('Rain','blue',T.partial?'Falling on part of the lap only':'Track getting wet. Watch the crossover.')}
+  if(r===0&&S.prevRain>0) radio('Rain has stopped. The track will start to dry.','wx');
+  if(S.peakWe>0.3&&S.we<0.15&&!S.dryAnnounced){S.dryAnnounced=true;radio('Dry line appearing. Slicks are about to be quicker.','wx');flash('Track drying','info','Slicks will soon be faster than Inters.')}
+  S.prevRain=r;
+}
+
 function step(){
   if(S.phase!=='race') return;
-  const lap=++S.lap, sc=S.scActive, loss=pitLoss();
+  const lap=++S.lap;
+  weatherTick(lap);
+  const sc=S.scActive, loss=pitLoss();
   const order=[...S.cars].sort((a,b)=>a.total-b.total);
   const ahead=order[order.indexOf(S.me)-1], behind=order[order.indexOf(S.me)+1];
   const startPos=order.indexOf(S.me)+1;
+  const pittedPrev=new Set(S.cars.filter(c=>c.pitLap===lap-1));
   const res=new Map();
-  for(const c of order){
-    const comp=c.isPlayer?c.boxReq:aiDecide(c,lap,sc);
+  order.forEach((c,i)=>{
+    const comp=c.isPlayer?c.boxReq:aiDecide(c,lap,sc,order[i+1],pittedPrev);
     const lt=sc? T.base*1.26+noise()*0.3 : lapTime(c,lap);
     const pitted=!!comp;
     res.set(c,{lt,raw:c.total+lt+(pitted?loss:0),pitted,clean:!pitted&&!c.outLap&&!sc});
     c.outLap=false;
-    c.wear+=(sc?0.3:(c.isPlayer?MODES[S.mode].wear:1))*T.deg; c.age++;
+    c.wear+=wearRate(c,lap,sc); c.age++;
     if(pitted){
       c.pits[lap]=loss;
       if(c===ahead||c===behind) S.dramaLap=lap;
@@ -420,7 +597,7 @@ function step(){
       else if(c===ahead) radio(`${c.code} ahead is pitting for ${COMP[comp].name}s.`);
       else if(c===behind) radio(`${c.code} behind has boxed. ${COMP[comp].name}s.`);
     }
-  }
+  });
   if(sc){
     const arr=[...order].sort((a,b)=>res.get(a).raw-res.get(b).raw);
     let prevRaw=null,prevNew=null;
@@ -449,6 +626,8 @@ function step(){
   const me=S.me, lf=1-me.wear/COMP[me.comp].life;
   if(lf<0.25&&me.warned<1){me.warned=1;radio('Tyres are starting to go. Think about the box.','bad');flash('Tyres going off','red','About a quarter of their life left. Think about the box.')}
   if(lf<0.02&&me.warned<2){me.warned=2;radio('We are on the cliff. Losing big time every lap!','bad');flash('Tyres gone','red','You are losing seconds every lap.')}
+  if(SLICK(me.comp)&&S.we>0.22&&me.wxWarn!==lap-1&&S.rain>0){me.wxWarn=lap;radio('Track is too wet for slicks. Inters are faster now.','bad')}
+  if(me.comp==='I'&&S.we<0.12&&S.peakWe>0.2&&!me.dryWarn){me.dryWarn=1;radio('Inters are overheating. Slicks are faster now.','bad')}
   const endPos=[...S.cars].sort((a,b)=>a.total-b.total).indexOf(me)+1;
   if(endPos<startPos && !sc && !res.get(me).pitted && startPos-endPos>1) radio(`Up to P${endPos}.`,'good');
   if(lap===T.laps-5) flash('5 laps to go','info','Every position counts now.');
@@ -469,20 +648,32 @@ function step(){
   render();
 }
 
+/* ---------- results and sharing ---------- */
 function shareText(pos,pen){
   const me=S.me, g=me.grid-pos;
-  const head = GMODE==='daily' ? `Pit Wall daily · ${TODAY_LABEL}` : 'Pit Wall · free practice';
+  const head = GMODE==='daily' ? `Pit Wall daily · ${TODAY_LABEL}` : GMODE==='challenge' ? `Pit Wall challenge vs ${GH.code}` : 'Pit Wall · free practice';
   const stints=me.stints.filter(s=>s.to>=s.from).map(s=>`${EMO[s.comp]} ${s.comp} ${s.to-s.from+1}`).join(' · ');
-  const url=/^https?:/.test(location.protocol)?'\n'+location.origin+location.pathname.replace(/index\.html$/,''):'';
-  return `${head}\n${T.name}, ${T.laps} laps\nP${me.grid} ➜ P${pos} (${g>0?'+'+g:g})\n${stints}\n${me.stops} stop${me.stops===1?'':'s'} · best ${isFinite(me.best)?fmt(me.best):'n/a'}${pen?' · +10 s penalty':''}${url}`;
+  let vs='';
+  if(GH){const d=me.total-GH.tt; vs= d<0?`\nBeat ${GH.code} by ${(-d).toFixed(1)} s`:`\nLost to ${GH.code} by ${d.toFixed(1)} s`}
+  return `${head}\n${T.name}, ${T.laps} laps${S.peakWe>0.2?' · rain':''}\nP${me.grid} ➜ P${pos} (${g>0?'+'+g:g})\n${stints}\n${me.stops} stop${me.stops===1?'':'s'} · best ${isFinite(me.best)?fmt(me.best):'n/a'}${pen?' · +10 s penalty':''}${vs}`;
+}
+function buildLink(tag){
+  const me=S.me, H=me.hist, laps=[];
+  for(let i=1;i<H.length;i++) laps.push(Math.round((H[i]-H[i-1])*100).toString(36));
+  const payload={v:1,s:S.seed,t:TRACKS.indexOf(T),n:tag,p:S.result.pos,g:me.grid,tt:Math.round(me.total*100)/100,
+    h0:Math.round(H[0]*100)/100,h:laps.join('.'),pl:Object.entries(me.pits).map(([l,loss])=>[+l,Math.round(loss*10)]),
+    st:me.stints.filter(s=>s.to>=s.from).map(s=>[s.comp,s.from,s.to]),b:isFinite(me.best)?Math.round(me.best*1000)/1000:0};
+  const base=/^https?:/.test(location.protocol)?location.origin+location.pathname.replace(/index\.html$/,''):location.href.split('?')[0];
+  return base+'?c='+b64e(JSON.stringify(payload));
 }
 function finish(){
   stop(); S.phase='done';
   const me=S.me; let pen=false;
   me.stints[me.stints.length-1].to=T.laps;
-  if(me.used.size<2){me.total+=10;pen=true;radio('10 second penalty. We only used one compound.','bad')}
+  if(needsTwo(me)){me.total+=10;pen=true;radio('10 second penalty. We only used one dry compound.','bad')}
   const order=[...S.cars].sort((a,b)=>a.total-b.total);
   const pos=order.indexOf(me)+1, gained=me.grid-pos;
+  S.result={pos,pen};
   setAnim(Math.max(...S.cars.map(c=>c.hist[c.hist.length-1])),1800);
   document.body.classList.remove('sc');
   render(); updatePlay();
@@ -493,9 +684,17 @@ function finish(){
   $('verdict').textContent= pos===1?'Race win. Strategy masterclass.':pos<=3?'Podium! Champagne on the pit wall.':gained>0?'Solid. Places gained.':gained===0?'Held station.':'Tough day at the office.';
   const note = GMODE==='daily' ? (official?' This is your official result for today.':' Replay only. Your first run today is the one that counts.') : '';
   $('resText').innerHTML=`Started P${me.grid}, finished P${pos} (${gained>0?'+'+gained:gained}). ${me.stops} stop${me.stops===1?'':'s'}, best lap <b>${isFinite(me.best)?fmt(me.best):'n/a'}</b>.${pen?' Includes a 10 s compound penalty.':''} Fastest lap went to <b>${S.fastest.code}</b>.${note}`;
+  const vs=$('vs');
+  if(GH){
+    const d=me.total-GH.tt, win=d<0;
+    vs.hidden=false; vs.className='vs '+(win?'win':'lose');
+    vs.innerHTML=`<strong>${win?`You beat ${GH.code}`:`${GH.code} beat you`} by ${Math.abs(d).toFixed(1)} s</strong><span>You: P${pos}, ${fmtRace(me.total)} · ${GH.code}: P${GH.pos}, ${fmtRace(GH.tt)}</span>`;
+    $('share').textContent=win?'Send it back':'Challenge back';
+  } else { vs.hidden=true; $('share').textContent='Challenge a friend'; }
   $('shareBox').textContent=text;
   const lead=order[0].total;
-  $('resTable').innerHTML=order.map((c,i)=>`<tr class="${c.isPlayer?'me':''}"><td>P${i+1}</td><td>${c.code}</td><td style="text-align:right">${i?'+'+(c.total-lead).toFixed(3):fmt(c.total)}</td><td style="text-align:right">${c.stops} stop${c.stops===1?'':'s'}</td></tr>`).join('');
+  $('resTable').innerHTML=order.map((c,i)=>`<tr class="${c.isPlayer?'me':''}"><td>P${i+1}</td><td>${c.code}</td><td style="text-align:right">${i?'+'+(c.total-lead).toFixed(3):fmtRace(c.total)}</td><td style="text-align:right">${c.stops} stop${c.stops===1?'':'s'}</td></tr>`).join('');
+  $('tag').value=store.get('pitwall-tag')||'';
   setTimeout(()=>{if(S.phase==='done')$('result').hidden=false},1900);
 }
 
@@ -503,42 +702,66 @@ function finish(){
 let rowEls=new Map();
 function buildRows(){
   const box=$('rows'); box.innerHTML=''; rowEls=new Map();
-  for(const c of S.cars){
-    const el=document.createElement('div'); el.className='row'+(c.isPlayer?' me':'');
-    el.innerHTML=`<span class="pos"></span><span class="stripe" style="background:${c.color}"></span><span class="who"><span class="code">${c.code}</span><span class="nm">${c.name}</span></span><span class="r mono gap"></span><span class="r mono last"></span><span class="tyrecell"><span class="tyre"></span><span class="age"></span></span><span class="r mono pits"></span>`;
+  const list=GH?[...S.cars,GH]:S.cars;
+  box.style.height=(list.length*40)+'px';
+  for(const c of list){
+    const el=document.createElement('div'); el.className='row'+(c.isPlayer?' me':'')+(c.isGhost?' ghost':'');
+    el.innerHTML=`<span class="pos"></span><span class="stripe" style="background:${c.isGhost?'transparent':c.color}"></span><span class="who"><span class="code">${c.code}</span><span class="nm">${c.name}</span></span><span class="r mono gap"></span><span class="r mono last"></span><span class="tyrecell"><span class="tyre"></span><span class="age"></span></span><span class="r mono pits"></span>`;
     box.appendChild(el); rowEls.set(c,el);
   }
 }
+function ghostState(){
+  const L=Math.min(S.lap,GH.hist.length-1), total=GH.hist[L];
+  const st=GH.stints.find(s=>s.from<=L+1&&s.to>=L+1)||GH.stints[GH.stints.length-1];
+  return {total,comp:st.comp,age:Math.max(0,L+1-st.from),stops:GH.stints.filter(s=>s.from<=L).length-1,last:L?GH.hist[L]-GH.hist[L-1]:null,pitted:!!GH.pits[L]};
+}
+function paceRank(){const me=S.me;return S.cars.filter(c=>!c.isPlayer&&c.skill>me.skill).length}
 function renderBrief(){
   document.querySelectorAll('[data-gmode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.gmode===GMODE));
+  $('chalTab').hidden=!GHOST;
+  if(GHOST) $('chalLabel').textContent=`${GHOST.n} set P${GHOST.p} at ${TRACKS[GHOST.t].name}`;
   $('dailyLabel').textContent=TODAY_LABEL+' · same race for everyone';
   const tp=$('trackPick'); tp.hidden=GMODE!=='practice';
   tp.innerHTML=TRACKS.map((t,i)=>`<button class="chip" data-track="${i}" aria-pressed="${i===PTRACK}">${t.name}</button>`).join('');
   tp.querySelectorAll('[data-track]').forEach(b=>b.addEventListener('click',()=>{PTRACK=+b.dataset.track;init()}));
-  $('trackCard').innerHTML=`<span class="tn">${T.name}</span><span><b>${T.laps}</b> laps</span><span>Pit loss <b>${T.pit} s</b></span><span>Tyre wear <b>${T.deg>1.1?'High':T.deg<0.9?'Low':'Medium'}</b></span><span>${T.note}</span>`;
+  const risk=T.rain>=0.5?'High':T.rain>0?'Medium':'None';
+  $('trackCard').innerHTML=`<span class="tn">${T.name}</span><span><b>${T.laps}</b> laps</span><span>Pit loss <b>${T.pit} s</b></span><span>Tyre wear <b>${T.deg>1.1?'High':T.deg<0.9?'Low':'Medium'}</b></span><span>Rain risk <b>${risk}</b></span><span>Safety car <b>${T.sc>=0.7?'Likely':'Possible'}</b></span><span class="tnote">${T.note}</span>`;
   const done=store.get(DAILY_KEY), dn=$('doneNote');
   dn.hidden=!(GMODE==='daily'&&done);
   if(done) dn.textContent=`You finished P${done.pos} today. You can race it again, but your first result is the one that counts.`;
-  $('rules').innerHTML=`Pit stops cost <b>${T.pit} s</b> here, or about <b>${Math.round(T.pit*0.54)} s</b> under a safety car. Run <b>two different compounds</b> or take a 10 s penalty. Push burns tyres, save makes them last.`;
+  const cn=$('chalNote'); cn.hidden=!GH;
+  if(GH) cn.innerHTML=`<b>${GH.code}</b> challenges you. Same race, same rivals, same weather. They went from P${GH.grid} to <b>P${GH.pos}</b> in ${fmtRace(GH.tt)}. Their ghost car runs alongside you. Beat their time.`;
+  const k=paceRank(), pace=k>=7?'one of the quickest cars in the field':k>=4?'a midfield car on pace':'one of the slower cars, so strategy has to do the work';
+  $('intro').innerHTML=`You're the strategist for car 27, starting <b>P${S.me.grid}</b> of 10. Today it's ${pace}. Get it to the front with tyres, timing and nerve.`;
+  $('rules').innerHTML=`Pit stops cost <b>${T.pit} s</b> here, or about <b>${Math.round(T.pit*0.54)} s</b> under a safety car. Run <b>two different dry compounds</b> or take a 10 s penalty${T.rain?', unless you use Inters or Wets':''}. Push burns tyres, save makes them last.`;
   $('lifeS').textContent=`Fastest. Lasts ~${Math.round(life('S'))} laps.`;
   $('lifeM').textContent=`Balanced. ~${Math.round(life('M'))} laps.`;
-  $('lifeH').textContent=`Slow but lasts ~${Math.round(life('H'))} laps.`;
+  $('lifeH').textContent=T.cold?`Lasts ~${Math.round(life('H'))} laps, but low grip in the cold.`:`Slow but lasts ~${Math.round(life('H'))} laps.`;
+  document.querySelectorAll('.wxonly').forEach(b=>b.hidden=!T.rain);
 }
 function render(){
-  const order=[...S.cars].sort((a,b)=>a.total-b.total), lead=order[0].total;
-  order.forEach((c,i)=>{
+  const list=S.cars.map(c=>({c,total:c.total}));
+  if(GH) list.push({c:GH,total:ghostState().total});
+  list.sort((a,b)=>a.total-b.total);
+  const lead=Math.min(...S.cars.map(c=>c.total));
+  let n=0;
+  list.forEach(({c,total},i)=>{
     const el=rowEls.get(c); el.style.transform=`translateY(${i*40}px)`;
-    el.querySelector('.pos').textContent=i+1;
-    el.querySelector('.gap').textContent= S.lap===0? (i?'+'+(c.total-lead).toFixed(1):'') : i===0?'Leader':'+'+(c.total-lead).toFixed(3);
-    const last=el.querySelector('.last');
-    if(c.pitLap===S.lap&&S.lap>0){last.className='r mono last';last.innerHTML='<span class="pit">PIT</span>';}
-    else{ last.textContent=c.last?fmt(c.last):'';
-      last.className='r mono last'+(c.lastClean&&c.last===S.fastest.t?' purple':c.lastClean&&c.last===c.best?' pb':'');}
-    const t=el.querySelector('.tyre'); t.className='tyre '+c.comp; t.textContent=c.comp;
-    el.querySelector('.age').textContent=c.age;
-    el.querySelector('.pits').textContent=c.stops;
+    const g=c.isGhost?ghostState():null;
+    el.querySelector('.pos').textContent=c.isGhost?'G':++n;
+    const gap=total-lead;
+    el.querySelector('.gap').textContent= S.lap===0? (gap>0.01?'+'+gap.toFixed(1):'') : gap<0.0005&&!c.isGhost?'Leader':(gap<0?'−':'+')+Math.abs(gap).toFixed(3);
+    const last=el.querySelector('.last'), pitted=c.isGhost?g.pitted:c.pitLap===S.lap;
+    const lt=c.isGhost?g.last:c.last;
+    if(pitted&&S.lap>0){last.className='r mono last';last.innerHTML='<span class="pit">PIT</span>';}
+    else{ last.textContent=lt?fmt(lt):'';
+      last.className='r mono last'+(!c.isGhost&&c.lastClean&&c.last===S.fastest.t?' purple':!c.isGhost&&c.lastClean&&c.last===c.best?' pb':'');}
+    const comp=c.isGhost?g.comp:c.comp;
+    const t=el.querySelector('.tyre'); t.className='tyre '+comp; t.textContent=comp;
+    el.querySelector('.age').textContent=c.isGhost?g.age:c.age;
+    el.querySelector('.pits').textContent=c.isGhost?g.stops:c.stops;
   });
-  $('sub').textContent=`${T.name} · ${GMODE==='daily'?'Daily race':'Free practice'}`;
+  $('sub').textContent=`${T.name} · ${GMODE==='daily'?'Daily race':GMODE==='challenge'?'Challenge vs '+GH.code:'Free practice'}`;
   $('lapNo').innerHTML=`${S.lap}<small>/${T.laps}</small>`;
   const f=$('flag');
   if(S.phase==='done'){f.className='flag done';f.textContent='Chequered'}
@@ -547,6 +770,7 @@ function render(){
   else {f.className='flag';f.textContent='Grid'}
   updateBanner();
 
+  const order=[...S.cars].sort((a,b)=>a.total-b.total);
   const me=S.me, k=COMP[me.comp], i=order.indexOf(me);
   $('myTyre').className='tyre '+me.comp; $('myTyre').textContent=me.comp;
   $('myPos').textContent='P'+(i+1);
@@ -558,13 +782,29 @@ function render(){
   const a=order[i-1], b=order[i+1];
   $('gapAhead').innerHTML= a?`Ahead <b class="mono">${a.code} +${(me.total-a.total).toFixed(2)}</b>`:'<b>Leading</b>';
   $('gapBehind').innerHTML= b?`Behind <b class="mono">${b.code} −${(b.total-me.total).toFixed(2)}</b>`:'<b>Last</b>';
+  const gk=$('ghostGap'); gk.hidden=!GH;
+  if(GH){const d=me.total-ghostState().total; gk.innerHTML=`Ghost <b class="mono">${GH.code}</b> <b class="mono ${d<=0?'pb':'bad'}">${d<=0?'you lead by '+(-d).toFixed(2):'ahead by '+d.toFixed(2)} s</b>`}
+  // weather
+  const wxp=$('wxPanel'); wxp.hidden=!T.rain;
+  if(T.rain){
+    const fc=activeForecast();
+    let txt, cls;
+    if(S.rain>0.05){txt=`Raining · ${S.rain>0.7?'heavy':S.rain>0.35?'moderate':'light'}${T.partial?' on part of the lap':''}`;cls='rain'}
+    else if(fc&&S.phase==='race'){txt=`${fc.pct}% chance of rain in ~${Math.max(1,fc.lap-S.lap)} laps`;cls='threat'}
+    else if(S.wet>0.05){txt='Rain stopped · track drying';cls='drying'}
+    else {txt=S.phase==='race'?'Dry · no rain on the radar':'Dry at the start';cls='dry'}
+    $('wxText').textContent=txt; $('wxDot').className='wxdot '+cls;
+    $('wetLabel').textContent=wetWord(S.we);
+    $('wetBar').style.width=Math.round(S.we*100)+'%';
+    const bt=bestTyreFor(S.we); $('wxBest').textContent='Fastest tyre now: '+(bt==='slick'?'Slicks':COMP[bt].name);
+  }
   const loss=pitLoss(), after=me.total+loss;
   const infront=order.filter(c=>c!==me&&c.total<after);
   const fc=$('forecast');
   if(S.phase!=='race') fc.innerHTML='Pit forecasts appear once the race starts.';
   else if(me.boxReq) fc.innerHTML=`Boxing at the end of lap ${S.lap+1} for <b>${COMP[me.boxReq].name}s</b>. Tap again to cancel.`;
   else fc.innerHTML=`Pit now (${Math.round(loss)} s) and you rejoin around <b>P${infront.length+1}</b>${infront.length?`, behind ${infront[infront.length-1].code}`:''}.`;
-  document.querySelectorAll('.boxbtn').forEach(btn=>{btn.disabled=S.phase!=='race';btn.setAttribute('aria-pressed',btn.dataset.comp===me.boxReq)});
+  document.querySelectorAll('.boxbtn[data-comp]').forEach(btn=>{btn.disabled=S.phase!=='race';btn.setAttribute('aria-pressed',btn.dataset.comp===me.boxReq)});
   $('radio').innerHTML=S.log.length?S.log.map(m=>`<li><span class="l">L${m.lap}</span><span class="${m.kind}">${m.text}</span></li>`).join(''):'<li><span class="l">L0</span><span>Radio check. Pick a starting tyre and we go.</span></li>';
   drawChart();
 }
@@ -594,7 +834,7 @@ function run(){stop();S.running=true;schedule(PACE[S.speed]);updatePlay()}
 function schedule(d){timer=setTimeout(()=>{timer=null;step();if(S.running&&S.phase==='race')schedule(S.nextDelay)},d)}
 function stop(){if(timer)clearTimeout(timer);timer=null;if(S)S.running=false;}
 /* Slow the game down for the moments that matter, whatever the speed setting. */
-function drama(){const me=S.me;return S.lap>=T.laps-5||S.scActive||S.dramaLap===S.lap||(1-me.wear/COMP[me.comp].life)<0.3}
+function drama(){const me=S.me;return S.lap>=T.laps-5||S.scActive||S.dramaLap===S.lap||S.rain>0||(S.we>0.08)||(1-me.wear/COMP[me.comp].life)<0.3}
 function nextDelay(){const d=PACE[S.speed];return drama()?Math.max(d,2200):d}
 
 /* ---------- race control banner ---------- */
@@ -630,7 +870,7 @@ function buildGeom(){
   const cum=[0]; for(let i=1;i<pts.length;i++) cum.push(cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));
   G={pts,cum,L:cum[cum.length-1],cx:pts.reduce((a,p)=>a+p[0],0)/pts.length,cy:pts.reduce((a,p)=>a+p[1],0)/pts.length,w,h,dpr};
   const css=getComputedStyle(document.documentElement);
-  for(const k of ['--line','--panel','--panel2','--fg','--muted','--amber','--bg','--display']) MC[k]=css.getPropertyValue(k).trim();
+  for(const k of ['--line','--panel','--panel2','--fg','--muted','--amber','--bg','--display','--wet']) MC[k]=css.getPropertyValue(k).trim();
   $('mapName').textContent=T.name;
 }
 function at(f,off=0){
@@ -654,25 +894,35 @@ function progress(c,tau){
   const a=(D-P)*0.92;
   return e<a ? [j-1+0.92*e/a,false] : [j-1+0.92+0.08*(e-a)/(D-a),true];
 }
-function trackPath(g){g.beginPath();G.pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath()}
+function trackPath(g,from=0,to=1){
+  g.beginPath();
+  if(from===0&&to===1){G.pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();return}
+  for(let i=0;i<=60;i++){const [x,y]=at(from+(to-from)*i/60);i?g.lineTo(x,y):g.moveTo(x,y)}
+}
 function drawMap(){
   if(!G||!S) return;
   const g=$('map').getContext('2d'); g.setTransform(G.dpr,0,0,G.dpr,0,0); g.clearRect(0,0,G.w,G.h);
   g.lineJoin='round'; g.lineCap='round';
   trackPath(g); g.strokeStyle=MC['--line']; g.lineWidth=17; g.stroke();
   trackPath(g); g.strokeStyle=MC['--panel2']; g.lineWidth=12; g.stroke();
+  if(S.wet>0.02){T.partial?trackPath(g,0.32,0.72):trackPath(g); g.strokeStyle=MC['--wet']; g.globalAlpha=Math.min(0.6,0.15+S.wet*0.5); g.lineWidth=12; g.stroke(); g.globalAlpha=1}
   if(S.scActive){trackPath(g); g.strokeStyle=MC['--amber']; g.globalAlpha=0.28; g.lineWidth=12; g.stroke(); g.globalAlpha=1}
   // pit lane
   g.beginPath(); for(let i=0;i<=40;i++){const [x,y]=at(0.9+i*0.0025,15); i?g.lineTo(x,y):g.moveTo(x,y)}
   g.setLineDash([3,4]); g.strokeStyle=MC['--muted']; g.lineWidth=2; g.stroke(); g.setLineDash([]);
   // start / finish line
   const [ax,ay]=at(0,8),[bx,by]=at(0,-8); g.beginPath(); g.moveTo(ax,ay); g.lineTo(bx,by); g.strokeStyle=MC['--fg']; g.lineWidth=3; g.stroke();
-  // cars
   const tau=animT(), list=S.cars.map(c=>{const [p,pit]=progress(c,tau);return{c,p,pit}});
   const leadP=Math.max(...list.map(o=>o.p));
   if(S.scActive&&S.phase==='race'){
     const [x,y]=at(leadP+0.02); g.fillStyle=MC['--amber']; g.beginPath(); g.roundRect?g.roundRect(x-11,y-7,22,14,3):g.rect(x-11,y-7,22,14); g.fill();
     g.fillStyle='#111'; g.font='800 10px '+MC['--display']; g.textAlign='center'; g.textBaseline='middle'; g.fillText('SC',x,y+0.5);
+  }
+  // ghost car
+  if(GH&&S.phase!=='brief'){
+    const [p,pit]=progress(GH,tau), [x,y]=at(p,pit?15:0);
+    g.beginPath(); g.arc(x,y,7,0,Math.PI*2); g.globalAlpha=0.9; g.setLineDash([2.5,2.5]); g.lineWidth=2; g.strokeStyle=MC['--fg']; g.stroke(); g.setLineDash([]);
+    g.font='800 11px '+MC['--display']; g.textAlign='center'; g.textBaseline='top'; g.fillStyle=MC['--fg']; g.fillText(GH.code,x,y+10); g.globalAlpha=1;
   }
   list.sort((a,b)=>a.c.isPlayer-b.c.isPlayer);
   for(const o of list){
@@ -686,13 +936,14 @@ function drawMap(){
 function frame(){drawMap();requestAnimationFrame(frame)}
 function updatePlay(){const b=$('play');b.disabled=S.phase!=='race';b.textContent=S.running||S.phase!=='race'?'Pause':'Resume';b.classList.toggle('primary',!S.running&&S.phase==='race')}
 function setMode(m){S.mode=m;document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m))}
-function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2200)}
+function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2400)}
 
 document.querySelectorAll('[data-gmode]').forEach(b=>b.addEventListener('click',()=>{GMODE=b.dataset.gmode;init()}));
 document.querySelectorAll('[data-start]').forEach(b=>b.addEventListener('click',()=>{
   const me=S.me; me.comp=b.dataset.start; me.used=new Set([me.comp]); me.stints=[{comp:me.comp,from:1}];
   S.phase='race'; $('brief').hidden=true;
-  radio(`Lights out! Starting on ${COMP[me.comp].name}s. Plenty of time, let's be smart.`);
+  radio(`Lights out! Starting on ${COMP[me.comp].name}s from P${me.grid}. Let's be smart.`);
+  if(GH) radio(`${GH.code}'s ghost is on track with us. Beat their time.`);
   render(); run();
 }));
 $('play').addEventListener('click',()=>{S.running?stop():run();updatePlay()});
@@ -702,16 +953,20 @@ document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',
 }));
 document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{setMode(b.dataset.mode);
   radio(b.dataset.mode==='push'?'Push mode. Everything you have.':b.dataset.mode==='save'?'Tyre save mode. Lift and coast.':'Back to standard mode.');render()}));
-document.querySelectorAll('[data-comp]').forEach(b=>b.addEventListener('click',()=>{
+document.querySelectorAll('.boxbtn[data-comp]').forEach(b=>b.addEventListener('click',()=>{
   if(S.phase!=='race')return; const me=S.me;
   me.boxReq= me.boxReq===b.dataset.comp?null:b.dataset.comp; render();
 }));
 $('again').addEventListener('click',init);
+$('tag').addEventListener('input',e=>{const v=e.target.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,3);if(v!==e.target.value)e.target.value=v});
 $('share').addEventListener('click',async()=>{
-  const text=$('shareBox').textContent;
+  const tag=$('tag').value;
+  if(!/^[A-Z]{3}$/.test(tag)){toast('Add your 3-letter tag first');$('tag').focus();return}
+  store.set('pitwall-tag',tag);
+  const text=$('shareBox').textContent+'\n\nThink you can beat me? Race it here:\n'+buildLink(tag);
   if(navigator.share){try{await navigator.share({text});return}catch(e){if(e&&e.name==='AbortError')return}}
-  try{await navigator.clipboard.writeText(text);toast('Result copied. Paste it anywhere.')}
-  catch(e){const r=document.createRange();r.selectNodeContents($('shareBox'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Text selected. Copy it to share.')}
+  try{await navigator.clipboard.writeText(text);toast('Challenge copied. Paste it to a friend.')}
+  catch(e){$('shareBox').textContent=text;const r=document.createRange();r.selectNodeContents($('shareBox'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Text selected. Copy it to share.')}
 });
 document.querySelectorAll('[data-scbox]').forEach(b=>b.addEventListener('click',()=>{
   const comp=b.dataset.scbox; S.me.boxReq=comp; radio(`Boxing under the safety car for ${COMP[comp].name}s.`,'sc');
